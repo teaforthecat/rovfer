@@ -1,4 +1,4 @@
 require 'rovfer'
-require 'debugger'
+require 'byebug'
 RSpec.configure do |config|
 end
