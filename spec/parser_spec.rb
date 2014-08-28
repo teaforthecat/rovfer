@@ -105,11 +105,13 @@ describe Rovfer::Parser do
       expect(parser.ram).to eql('1024')
     end
 
-    it 'can save the scsci_controller_type correctly' do
+    it 'can save the scsci_controller_type correctly - removing all IDE Controllers' do
+      expect{ parser.find_item('IDE Controller') }.to_not raise_error
       parser.scsi_controller_type= 'VirtualSCSI-something'
       parser.save
       parser.reload
       expect(parser.scsi_controller_type).to eql('VirtualSCSI-something')
+      expect{ parser.find_item('IDE Controller') }.to raise_error(Rovfer::Parser::MissingElement)
     end
 
     it 'can save the special vmware config' do
