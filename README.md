@@ -25,6 +25,7 @@ Or install it yourself as:
     parser.set_os_type 'Centos', '6', 'Centos 6 Minimal'
     parser.ram = 1024 # in megabytes
     parser.scsi_controller_type= 'VirtualSCSI'
+    parser.disk_image_config['backing.writeThrough'] = true
     parser.add_special_vmware_config
     parser.save #overwrites the ovf file
 

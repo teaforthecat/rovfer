@@ -1,5 +1,17 @@
 module Rovfer
+  module Builder
+    def new_node name, content=nil, attrs={}
+      node = Nokogiri::XML::Node.new(name, @xml )
+      attrs.collect{ | k,v| node[k] = v}
+      node.content = content if content
+      node << yield if block_given?
+      node
+    end
+  end
+
   class Parser
+    include Builder
+
     attr_accessor :xml_path
     attr_accessor :xml
     attr_accessor :namespace
@@ -37,6 +49,18 @@ module Rovfer
       end
     end
 
+    def disk_image_parent_id
+      disk_image.xpath('rasd:Parent').first.content
+    end
+
+    def disk_image
+      find_item 'Disk Image'
+    end
+
+    def disk_image_config
+      @disk_image_config ||= DiskImageConfig.new(@xml, disk_image)
+    end
+
     def networks
       # @xml.xpath('//xmlns:Network')
       find('NetworkSection', 'Network').collect do |e|
@@ -69,6 +93,7 @@ module Rovfer
       section << new_node( 'Description', desc ) if desc
     end
 
+    # aka: hardware version
     def system_type
       section = find('VirtualSystem', 'VirtualHardwareSection', 'System')
       section.xpath('vssd:VirtualSystemType').first.content
@@ -135,12 +160,6 @@ module Rovfer
       items.xpath("rasd:Description").find{ |e| e.content == 'IDE Controller' }.remove
     end
 
-    def disk_image_parent_id
-      item = find_item 'Disk Image'
-      item.xpath('rasd:Parent').first.content
-    end
-
-
     def add_special_vmw_config
       section = find 'VirtualHardwareSection'
       SpecialVmWareConfig.attrs.each do |k,v|
@@ -162,14 +181,6 @@ module Rovfer
 
     def find(*elements)
       @xml.xpath(get_in_envelope(*elements))
-    end
-
-    def new_node name, content=nil, attrs={}
-      node = Nokogiri::XML::Node.new(name, @xml )
-      attrs.collect{ | k,v| node[k] = v}
-      node.content = content if content
-      node << yield if block_given?
-      node
     end
 
     def ns
@@ -205,5 +216,37 @@ module Rovfer
               }
     def self.attrs;  @@attrs end
 
+  end
+
+  class DiskImageConfig
+    include Builder
+    attr_accessor :xml, :element
+    def initialize xml, element
+      @xml = xml
+      @element = element
+    end
+
+    def config
+      element.xpath('vmw:Config').reduce({}) do |acc,i|
+        acc[i.attributes['key'].to_s] = i.attributes['value'].to_s
+        acc
+      end
+    end
+
+    def []= key,value
+      config_item = @element.xpath('vmw:Config').select{ |e| e.attribute('key').value == key }.first
+      config_item ||= create_item key,value
+      config_item.set_attribute 'value', value
+    end
+
+    def [] key
+      config[key]
+    end
+
+    def create_item key,value
+      node = new_node 'vmw:Config', nil, {'vmw:key' => key, 'vmw:value' => value}
+      @element << node
+      node
+    end
   end
 end

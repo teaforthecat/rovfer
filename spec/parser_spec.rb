@@ -12,6 +12,7 @@ describe Rovfer::Parser do
 
   it "has disks" do
     expect(parser.disks).to_not be_nil
+    expect(parser.disks).to eql('what')
   end
 
   it 'has networks' do
@@ -37,6 +38,10 @@ describe Rovfer::Parser do
 
   it 'has a disk image' do
     expect( parser.disk_image_parent_id ).to eql('5')
+  end
+
+  it 'has a disk cache mode' do
+    expect(parser.disk_image_config['backing.writeThrough']).to eql('false')
   end
 
   context 'writing a file' do
@@ -97,6 +102,11 @@ describe Rovfer::Parser do
     it 'can save the special vmware config' do
       parser.add_special_vmw_config
       expect( parser.xml.xpath('//xmlns:VirtualSystem/xmlns:VirtualHardwareSection/vmw:Config').count ).to be >= (17)
+    end
+
+    it 'can set a disk_image_config item' do
+      result = parser.disk_image_config['backing.writeThrough'] = true
+      expect(parser.disk_image_config['backing.writeThrough']).to eql('true')
     end
 
   end
