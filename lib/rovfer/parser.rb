@@ -16,10 +16,13 @@ module Rovfer
     attr_accessor :xml
     attr_accessor :namespace
 
+    NameSpaces = {'vmw' => "http://www.vmware.com/schema/ovf"}
+
     # default to vmware for now
     def initialize(xml_path, namespace='vmw')
       @xml_path = xml_path
       load
+      @xml.root.add_namespace namespace, NameSpaces[namespace]
       @namespace = namespace
     end
 
@@ -62,7 +65,6 @@ module Rovfer
     end
 
     def networks
-      # @xml.xpath('//xmlns:Network')
       find('NetworkSection', 'Network').collect do |e|
         e.attributes['name'].value
       end
@@ -76,7 +78,27 @@ module Rovfer
           new_node 'Description', vlan
         end
       end
+      subtype = 'VmxNet3' #vmware
+      self.nics = Hash[vlans.zip([subtype]*vlans.size)]
       section
+    end
+
+    def nics
+      items = find_items.select{ |e| e.xpath('rasd:Connection').size == 1 } #best guess
+      items.collect{ |e| e.xpath('rasd:Connection').first.content }
+    end
+
+    # @param attrs[Hash]
+    # @example nics = {'DC_DMZ_CLIENT_QC_AS' => 'VmxNet3'}
+    def nics= attrs
+      items = find_items.select{ |e| e.xpath('rasd:Connection').size == 1 } #best guess
+      attributes = attrs.to_a
+      raise MissingElement.new('Network Adapter (may be missing or short one)') if items.size != attrs.size
+      items.each_with_index do |item,i|
+        vlan,subtype = attributes[i]
+        item.xpath('rasd:Connection').first.inner_html = vlan
+        item.xpath('rasd:ResourceSubType').first.inner_html = subtype
+      end
     end
 
     def os_type
@@ -152,7 +174,7 @@ module Rovfer
        "rasd:ResourceType"    => '6'}.each do |k,v|
         item << new_node( k, v )
       end
-      items.next_sibling item
+      items << item
     end
 
     def remove_ide_controllers
@@ -160,7 +182,7 @@ module Rovfer
       items.xpath("rasd:Description").find{ |e| e.content == 'IDE Controller' }.remove
     end
 
-    def add_special_vmw_config
+    def add_special_vmware_config
       section = find 'VirtualHardwareSection'
       SpecialVmWareConfig.attrs.each do |k,v|
         section << new_node( 'vmw:Config', nil, 'vmw:key' => k, 'vmw:value' => v)

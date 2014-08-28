@@ -12,7 +12,6 @@ describe Rovfer::Parser do
 
   it "has disks" do
     expect(parser.disks).to_not be_nil
-    expect(parser.disks).to eql('what')
   end
 
   it 'has networks' do
@@ -69,6 +68,20 @@ describe Rovfer::Parser do
       parser.save
       parser.reload
       expect( parser.networks ).to eql( ['OTHER'] )
+      expect( parser.nics ).to eql( ['OTHER'] )
+    end
+
+    it 'can save the nics correctly' do
+      parser.nics = {'OTHER' => 'VmxNet3'}
+      parser.save
+      parser.reload
+      expect( parser.nics ).to eql( ['OTHER'] )
+    end
+
+
+
+    it 'cannot create new nics' do
+      expect{parser.nics = {'OTHER' => 'VmxNet3', 'EXTRA' => 'thing'}}.to raise_error(Rovfer::Parser::MissingElement)
     end
 
     it 'can save the os_type correctly' do
@@ -100,7 +113,7 @@ describe Rovfer::Parser do
     end
 
     it 'can save the special vmware config' do
-      parser.add_special_vmw_config
+      parser.add_special_vmware_config
       expect( parser.xml.xpath('//xmlns:VirtualSystem/xmlns:VirtualHardwareSection/vmw:Config').count ).to be >= (17)
     end
 

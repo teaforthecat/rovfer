@@ -90,7 +90,7 @@
         <rasd:InstanceID>7</rasd:InstanceID>
         <rasd:Parent>5</rasd:Parent>
         <rasd:ResourceType>17</rasd:ResourceType>
-        <!-- <vmw:Config ovf:required="false" vmw:key="backing.writeThrough" vmw:value="false"/> -->
+        <vmw:Config ovf:required="false" vmw:key="backing.writeThrough" vmw:value="false"/>
 
       </Item>
       <vmw:Config ovf:required="false" vmw:key="cpuHotAddEnabled" vmw:value="true"/>
