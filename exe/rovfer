@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require 'rovfer/cli'
+
+Rovfer::CLI::Base.start
