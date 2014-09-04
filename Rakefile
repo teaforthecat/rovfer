@@ -1,1 +1,1 @@
-require "bundler/gem_tasks"
+require "bundler_geminabox/gem_tasks"

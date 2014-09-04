@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module Rovfer
   module Builder
     def new_node name, content=nil, attrs={}
