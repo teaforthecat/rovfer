@@ -8,9 +8,6 @@ module Rovfer::CLI
     option :networks, type: :array
     option :system_type, default: 'vmx-09', desc: 'vsphere version/compatibility'
     option :scsi_controller_type, default: 'VirtualSCSI'
-    option :os_type, default: 'Linux', aliases: ['-t']
-    option :os_version, default: "CentOS\ 4/5/6\ (64-bit)", desc: 'default is for an example', aliases: ['-v']
-    option :os_description, default: ""
     def to_vmware(path)
       xml_path = File.expand_path( path )
       bkup     =  xml_path + '.bkup'
@@ -22,7 +19,7 @@ module Rovfer::CLI
       parser = Rovfer::Parser.new xml_path
       parser.networks = options[:networks] if options[:networks]
       parser.system_type = options[:system_type]
-      parser.set_os_type( options[:os_type], options[:os_version], options[:os_description] )
+      parser.set_os_type( 'rhel6_64Guest', '6', 'Red Hat Enterprise Linux 6 (64-bit)' ) # this is the only version I know that works
       parser.scsi_controller_type= options[:scsi_controller_type]
       parser.disk_image_config['backing.writeThrough'] = true #not sure what this does, but it was set in an export
       parser.add_special_vmware_config #hot resize ram values and such
